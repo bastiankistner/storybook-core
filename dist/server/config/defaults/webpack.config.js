@@ -44,9 +44,6 @@ function createDefaultWebpackConfig(storybookBaseConfig) {
           }
         }]
       }, {
-        test: /\.json$/,
-        loader: require.resolve('json-loader')
-      }, {
         test: /\.(ico|jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2)(\?.*)?$/,
         loader: require.resolve('file-loader'),
         query: {
