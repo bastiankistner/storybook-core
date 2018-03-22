@@ -65,11 +65,13 @@ var StoryStore = function (_EventEmitter) {
     }
   }, {
     key: 'addStory',
-    value: function addStory(kind, name, fn, fileName) {
+    value: function addStory(kind, name, fn) {
+      var parameters = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
+
       if (!this._data[kind]) {
         this._data[kind] = {
           kind: kind,
-          fileName: fileName,
+          fileName: parameters.fileName,
           index: getId(),
           stories: {}
         };
@@ -78,10 +80,11 @@ var StoryStore = function (_EventEmitter) {
       this._data[kind].stories[name] = {
         name: name,
         index: getId(),
-        fn: fn
+        fn: fn,
+        parameters: parameters
       };
 
-      this.emit('storyAdded', kind, name, fn);
+      this.emit('storyAdded', kind, name, fn, parameters);
     }
   }, {
     key: 'getStoryKinds',
@@ -126,8 +129,8 @@ var StoryStore = function (_EventEmitter) {
       return storiesKind.fileName;
     }
   }, {
-    key: 'getStory',
-    value: function getStory(kind, name) {
+    key: 'getStoryAndParameters',
+    value: function getStoryAndParameters(kind, name) {
       var storiesKind = this._data[kind];
       if (!storiesKind) {
         return null;
@@ -138,7 +141,38 @@ var StoryStore = function (_EventEmitter) {
         return null;
       }
 
-      return storyInfo.fn;
+      var fn = storyInfo.fn,
+          parameters = storyInfo.parameters;
+
+      return {
+        story: fn,
+        parameters: parameters
+      };
+    }
+  }, {
+    key: 'getStory',
+    value: function getStory(kind, name) {
+      var data = this.getStoryAndParameters(kind, name);
+      return data && data.story;
+    }
+  }, {
+    key: 'getStoryWithContext',
+    value: function getStoryWithContext(kind, name) {
+      var data = this.getStoryAndParameters(kind, name);
+      if (!data) {
+        return null;
+      }
+
+      var story = data.story,
+          parameters = data.parameters;
+
+      return function () {
+        return story({
+          kind: kind,
+          story: name,
+          parameters: parameters
+        });
+      };
     }
   }, {
     key: 'removeStoryKind',

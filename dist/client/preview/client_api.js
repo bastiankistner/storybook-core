@@ -59,6 +59,10 @@ var ClientApi = function ClientApi() {
     _this._globalDecorators.push(decorator);
   };
 
+  this.addParameters = function (parameters) {
+    _this._globalParameters = parameters;
+  };
+
   this.clearDecorators = function () {
     _this._globalDecorators = [];
   };
@@ -80,6 +84,7 @@ var ClientApi = function ClientApi() {
     }
 
     var localDecorators = [];
+    var localParameters = {};
     var api = {
       kind: kind
     };
@@ -97,7 +102,7 @@ var ClientApi = function ClientApi() {
       };
     });
 
-    api.add = function (storyName, getStory) {
+    api.add = function (storyName, getStory, parameters) {
       if (typeof storyName !== 'string') {
         throw new Error('Invalid or missing storyName provided for a "' + kind + '" story.');
       }
@@ -114,12 +119,19 @@ var ClientApi = function ClientApi() {
       var fileName = m ? m.filename : null;
 
       // Add the fully decorated getStory function.
-      _this._storyStore.addStory(kind, storyName, _this._decorateStory(getStory, decorators), fileName);
+      _this._storyStore.addStory(kind, storyName, _this._decorateStory(getStory, decorators), (0, _extends3.default)({}, _this._globalParameters, localParameters, parameters, {
+        fileName: fileName
+      }));
       return api;
     };
 
     api.addDecorator = function (decorator) {
       localDecorators.push(decorator);
+      return api;
+    };
+
+    api.addParameters = function (parameters) {
+      localParameters = (0, _extends3.default)({}, localParameters, parameters);
       return api;
     };
 
@@ -131,7 +143,7 @@ var ClientApi = function ClientApi() {
       var fileName = _this._storyStore.getStoryFileName(kind);
 
       var stories = _this._storyStore.getStories(kind).map(function (name) {
-        var render = _this._storyStore.getStory(kind, name);
+        var render = _this._storyStore.getStoryWithContext(kind, name);
         return { name: name, render: render };
       });
 
@@ -142,6 +154,7 @@ var ClientApi = function ClientApi() {
   this._storyStore = storyStore;
   this._addons = {};
   this._globalDecorators = [];
+  this._globalParameters = {};
   this._decorateStory = decorateStory;
 };
 
